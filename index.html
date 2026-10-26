@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mentor Hub · Fun Fluency</title>
-<meta name="apple-mobile-web-app-title" content="Mentor Hub">
+<title>Teacher Hub · Fun Fluency</title>
+<meta name="apple-mobile-web-app-title" content="Teacher Hub">
 <meta name="theme-color" content="#3ec0c7">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -21,20 +21,32 @@
 </head>
 <body>
 <main>
-  <img src="icon-512.png" alt="Fun Fluency">
-  <h1>Mentor Hub</h1>
-  <p>Opening… sign in with your Fun Fluency account if asked.</p>
-  <a class="btn" id="go" href="#">Open Mentor Hub</a>
+  <img src="icon-512.png" alt="Fun Fluency Teacher Hub">
+  <h1>Teacher Hub</h1>
+  <p id="msg">Opening… sign in with your Fun Fluency account if asked.</p>
+  <a class="btn" id="go" href="#">Open Teacher Hub</a>
   <div class="bar"></div>
 </main>
 <script>
-  // ⬇️ Paste your Mentor Hub web app URL here (Deploy → Manage deployments → Web app URL)
- var APP_URL = "https://script.google.com/a/macros/funfluency.com/s/AKfycbz-MilUnSudyilv2jCtHnq-krGiVKs314rZKSKan3fK0SJq0-uIN_kiDSiuorzO9iXamg/exec";
+  // Mentor Hub web app URL (Deploy → Manage deployments → Web app URL)
+  var APP_URL = "https://script.google.com/a/macros/funfluency.com/s/AKfycbz-MilUnSudyilv2jCtHnq-krGiVKs314rZKSKan3fK0SJq0-uIN_kiDSiuorzO9iXamg/exec";
+  var params = new URLSearchParams(location.search);
+  var installing = params.has("install") || params.has("add");
+  params.delete("install"); params.delete("add");
+  var qs = params.toString() ? "?" + params.toString() : "";
+  var url = APP_URL + qs;                       // keeps a teacher's personal ?t= link
   var go = document.getElementById("go");
-  var url = APP_URL + (location.search || "");   // keeps a teacher's personal ?t= link
   go.href = url;
-  if (/^https:\/\//.test(APP_URL)) setTimeout(function () { location.replace(url); }, 600);
-  else go.textContent = "Add the app link in index.html first";
+  if (installing) {
+    // Stay on this page (so the phone saves the Fun Fluency icon) and drop "?install" from the address,
+    // so the saved icon opens Mentor Hub normally.
+    history.replaceState(null, "", location.pathname + qs);
+    document.getElementById("msg").innerHTML = "<b>Save Teacher Hub to your home screen:</b><br>" +
+      "iPhone / iPad: tap <b>Share</b> (square with an arrow) → <b>Add to Home Screen</b> → <b>Add</b>.<br>" +
+      "Android: tap <b>⋮</b> → <b>Add to Home screen</b>.<br>Computer (Chrome): <b>⋮ → Cast, save, and share → Create shortcut</b> → check <b>Open as window</b>.";
+  } else {
+    setTimeout(function () { location.replace(url); }, 500);
+  }
 </script>
 </body>
 </html>
