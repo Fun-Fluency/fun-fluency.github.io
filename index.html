@@ -29,8 +29,8 @@
     <img src="icon-512.png" alt="Fun Fluency Hub">
     <h1>Fun Fluency Hub</h1>
     <p id="msg">Opening… sign in with your Fun Fluency account if asked.</p>
-    <a class="btn" id="go" href="#" target="_top">Open Fun Fluency Hub</a>
-    <div id="help"><p>Taking a while? Tap the button above to open it directly.</p></div>
+    <a class="btn" id="go" href="#" target="_top" style="display:none">Open Fun Fluency Hub</a>
+    <div id="help"><p>Taking a while? This opens it directly (the address bar will show Google's address).</p></div>
     <div class="bar"></div>
   </main>
 </div>
@@ -49,13 +49,16 @@
   // iPhone/iPad Safari blocks Google sign-in inside another page, so there we open the app directly.
   var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
+  var show = function (href) { go.href = href; go.style.display = "inline-block"; };
   if (installing) {
     // Stay on this page (so the phone saves the Fun Fluency icon) and drop "?install" from the address.
     history.replaceState(null, "", location.pathname + qs);
+    show(isIOS ? url : location.pathname + qs);   // computers/Android: open the Hub inside this page
     document.getElementById("msg").innerHTML = "<b>Save Fun Fluency Hub to your home screen:</b><br>" +
       "iPhone / iPad: tap <b>Share</b> (square with an arrow) → <b>Add to Home Screen</b> → <b>Add</b>.<br>" +
       "Android: tap <b>⋮</b> → <b>Add to Home screen</b>.<br>Computer (Chrome): <b>⋮ → Cast, save, and share → Create shortcut</b> → check <b>Open as window</b>.";
   } else if (isIOS || direct) {
+    show(url);
     setTimeout(function () { location.replace(url); }, 400);
   } else {
     // Show the app inside this page, so the address bar stays on fun-fluency.github.io.
@@ -72,7 +75,7 @@
       }
     });
     // If the app hasn't loaded after 12 seconds (sign-in blocked, slow network), offer to open it directly.
-    setTimeout(function () { if (!ready) document.getElementById("help").style.display = "block"; }, 12000);
+    setTimeout(function () { if (!ready) { show(url); document.getElementById("help").style.display = "block"; } }, 12000);
   }
 </script>
 </body>
