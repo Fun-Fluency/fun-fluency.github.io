@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fun Fluency Hub</title>
+<meta name="apple-mobile-web-app-title" content="FF Hub">
+<meta name="theme-color" content="#3ec0c7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; }
+  body { color: #2b1316; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  #splash { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; box-sizing: border-box; background: #fff; z-index: 2; }
+  #splash img { width: 120px; height: 120px; }
+  h1 { margin: 12px 0 4px; font-size: 26px; }
+  p { margin: 0 auto 18px; color: #6b5458; max-width: 34em; line-height: 1.5; }
+  a.btn { display: inline-block; background: #3ec0c7; color: #fff; text-decoration: none; font-weight: 800; padding: 12px 22px; border-radius: 99px; }
+  .bar { height: 6px; width: 180px; margin: 18px auto 0; background: linear-gradient(90deg, #3ec0c7 33%, #f8cf19 33% 66%, #ec406d 66%); border-radius: 99px; }
+  #help { display: none; margin-top: 14px; font-size: 14px; }
+  #slow { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 3; background: #2b1316; color: #fff; padding: 10px 14px; border-radius: 99px; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,.25); max-width: calc(100% - 32px); }
+  #slow a { color: #f8cf19; font-weight: 800; } #slow button { background: none; border: 0; color: #fff; margin-left: 8px; cursor: pointer; }
+  #app { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+</style>
+</head>
+<body>
+<div id="splash">
+  <main>
+    <img src="icon-512.png" alt="Fun Fluency Hub">
+    <h1>Fun Fluency Hub</h1>
+    <p id="msg">Opening… sign in with your Fun Fluency account if asked.</p>
+    <a class="btn" id="go" href="#" target="_top" style="display:none">Open Fun Fluency Hub</a>
+    <div id="help"><p>Taking a while? This opens it directly (the address bar will show Google's address).</p></div>
+    <div class="bar"></div>
+  </main>
+</div>
+<script>
+  // Fun Fluency Hub web app URL (Apps Script → Deploy → Manage deployments → Web app URL)
+  var APP_URL = "https://script.google.com/a/macros/funfluency.com/s/AKfycbz-MilUnSudyilv2jCtHnq-krGiVKs314rZKSKan3fK0SJq0-uIN_kiDSiuorzO9iXamg/exec";
+  var params = new URLSearchParams(location.search);
+  var installing = params.has("install") || params.has("add");
+  var direct = params.has("direct");
+  ["install", "add", "direct"].forEach(function (k) { params.delete(k); });
+  var qs = params.toString() ? "?" + params.toString() : "";
+  var url = APP_URL + qs;                         // keeps a teacher's personal ?t= link
+  var go = document.getElementById("go");
+  go.href = url;
+
+  // Safari (iPhone, iPad AND Mac) blocks Google sign-in inside another page, so there we open the app directly.
+  var ua = navigator.userAgent;
+  var isSafari = /Safari\//.test(ua) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android/.test(ua);
+  var isIOS = isSafari || /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  var show = function (href) { go.href = href; go.style.display = "inline-block"; };
+  if (installing) {
+    // Stay on this page (so the phone saves the Fun Fluency icon) and drop "?install" from the address.
+    history.replaceState(null, "", location.pathname + qs);
+    show(isIOS ? url : location.pathname + qs);   // computers/Android: open the Hub inside this page
+    document.getElementById("msg").innerHTML = "<b>Save Fun Fluency Hub to your home screen:</b><br>" +
+      "iPhone / iPad: tap <b>Share</b> (square with an arrow) → <b>Add to Home Screen</b> → <b>Add</b>.<br>" +
+      "Android: tap <b>⋮</b> → <b>Add to Home screen</b>.<br>Computer: use <b>Google Chrome</b> → <b>⋮ → Cast, save, and share → Create shortcut</b> → check <b>Open as window</b>.";
+  } else if (isIOS || direct) {
+    show(url);
+    setTimeout(function () { location.replace(url); }, 400);
+  } else {
+    // Show the app inside this page, so the address bar stays on fun-fluency.github.io.
+    var f = document.createElement("iframe");
+    f.id = "app"; f.title = "Fun Fluency Hub"; f.src = url;
+    f.allow = "clipboard-write";
+    document.body.appendChild(f);
+    var ready = false;
+    window.addEventListener("message", function (e) {
+      if (e.data && e.data.ffhub === "ready") {
+        ready = true;
+        document.getElementById("splash").style.display = "none";
+        if (e.data.title) document.title = e.data.title;
+      }
+    });
+    // If the app hasn't answered after 6 seconds, show what's underneath (it may be asking you to sign in)
+    // and keep a small "open it directly" bar at the bottom.
+    setTimeout(function () {
+      if (ready) return;
+      document.getElementById("splash").style.display = "none";
+      var bar = document.createElement("div");
+      bar.id = "slow";
+      bar.innerHTML = 'Not loading? <a href="' + url + '" target="_top">Open Fun Fluency Hub directly</a> <button type="button" aria-label="Close">✕</button>';
+      bar.querySelector("button").onclick = function () { bar.remove(); };
+      document.body.appendChild(bar);
+      window.addEventListener("message", function (e) { if (e.data && e.data.ffhub === "ready" && bar.parentNode) bar.remove(); });
+    }, 6000);
+  }
+</script>
+</body>
+</html>
